@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>LCT学习笔记 | zxyhymzg</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://zxyhymzg.github.io/favicon.ico?v=1582848093341">
+<link rel="stylesheet" href="https://zxyhymzg.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="PS:图片均来自这个和这个,上传于洛谷图床。
+作者也是从后一个链接中学习的LCT，因此思路和码风可能有点像。
+这里是开场白
+学习LCT前，必须熟练掌握Splay！！！
+不会Splay请自行百度解决（洛谷日报上tiger0132那篇看不了了Q..." />
+    <meta name="keywords" content="OI" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://zxyhymzg.github.io">
+        <img src="https://zxyhymzg.github.io/images/avatar.png?v=1582848093341" class="site-logo">
+        <h1 class="site-title">zxyhymzg</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://zxyhymzg.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">LCT学习笔记</h2>
+            <div class="post-date">2020-02-27</div>
+            
+            <div class="post-content" v-pre>
+              <p>PS:图片均来自<a href="https://wenku.baidu.com/view/75906f160b4e767f5acfcedb">这个</a>和<a href="https://www.cnblogs.com/flashhu/p/8324551.html#4333208">这个</a>,上传于洛谷图床。</p>
+<p>作者也是从后一个链接中学习的LCT，因此思路和码风可能有点像。</p>
+<h2 id="这里是开场白">这里是开场白</h2>
+<p>学习LCT前，必须熟练掌握Splay！！！</p>
+<p>不会Splay请自行百度解决（洛谷日报上tiger0132那篇看不了了QWQ）</p>
+<h2 id="what-is-lct">What is  LCT</h2>
+<p>LCT（Link-Cut Tree）是为解决动态树问题由Sleater &amp; Tarjan提出的一种数据结构,支持换根（makeroot），动态连边（link），删边（cut),维护链上信息（split）等等<s>玄学且毒瘤的</s>操作。</p>
+<p>原树中每个非叶节点在LCT中最多只有一个“偏爱儿子”（“Prefered Son”），每个节点与其“Perfered Son”之间连接的是一条实边，与其他儿子连虚边。并不需要规定哪一个儿子是“Perfered Son”，在维护的过程中随时可能变化。</p>
+<p>LCT实际上可维护一片森林，使用不断变化的实链剖分，将每棵树剖分为多条实链（首尾相邻的一些实边），对每条实链使用一棵Splay维护，其中以原树实际深度作为Splay的排序关键字。</p>
+<p>搬运两张经典图片：</p>
+<figure data-type="image" tabindex="1"><img src="https://cdn.luogu.com.cn/upload/image_hosting/f25aq4sb.png" alt="" loading="lazy"></figure>
+<p>上图为原树，下图为一棵表示原树的LCT</p>
+<figure data-type="image" tabindex="2"><img src="https://cdn.luogu.com.cn/upload/image_hosting/5zj9e8an.png" alt="" loading="lazy"></figure>
+<p><strong>注意！！！LCT内的父子关系和原树中的可能非常不同</strong></p>
+<p>（比如上面的图，原树中C是G的父亲，但实际LCT中G是C的父亲）</p>
+<p>举几个例子自行加深理解：<s>想不明白可以先跳过</s></p>
+<ul>
+<li>一棵Splay内某节点前驱（如果有）是它在原树中的父亲</li>
+<li>一棵Splay内某节点后继（如果有）是它在原树中的“Perfered Son”</li>
+<li>虚边总是由一棵Splay的根节点向另一棵Splay的某个节点连边，且后者在LCT中是前者的父亲,</li>
+<li>同一实链上节点深度各不相同</li>
+</ul>
+<h2 id="how-to-make-lct">How to  make LCT</h2>
+<p>想到之前所说的虚边、实边、“Perfered Son”、多棵Splay等玄学描述，是不是已经觉得LCT很复杂了呢<s>难道不复杂吗</s></p>
+<p>事实上，LCT的实现并没有其实际描述那么玄学（甚至不用动态开点），通常还比树剖和各类大模拟短<s>猪国杀飘过</s>，下面是一棵常见LCT要用到的数组们：</p>
+<p>$f[x]: \text{节点x在LCT中的父亲} $</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>h</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>[</mo><mn>2</mn><mo>]</mo><mo>:</mo><mtext>节点x在其所在Splay中的左右儿子</mtext></mrow><annotation encoding="application/x-tex">ch[x][2]:\text{节点x在其所在Splay中的左右儿子}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">2</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord text"><span class="mord cjk_fallback">节点</span><span class="mord">x</span><span class="mord cjk_fallback">在其所在</span><span class="mord">Splay</span><span class="mord cjk_fallback">中的左右儿子</span></span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>v</mi><mi>a</mi><mi>l</mi><mo>[</mo><mi>x</mi><mo>]</mo><mi mathvariant="normal">/</mi><mi>s</mi><mi>u</mi><mi>m</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>:</mo><mtext>节点x本身的点权/以x为根的Splay子树点权和</mtext></mrow><annotation encoding="application/x-tex">val[x]/sum[x]:\text{节点x本身的点权/以x为根的Splay子树点权和}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mord">/</span><span class="mord mathdefault">s</span><span class="mord mathdefault">u</span><span class="mord mathdefault">m</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord cjk_fallback">节点</span><span class="mord">x</span><span class="mord cjk_fallback">本身的点权</span><span class="mord">/</span><span class="mord cjk_fallback">以</span><span class="mord">x</span><span class="mord cjk_fallback">为根的</span><span class="mord">Splay</span><span class="mord cjk_fallback">子树点权和</span></span></span></span></span></p>
+<p>（所以LCT只能维护点权？边权待会儿再讲处理方法）</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>r</mi><mi>e</mi><mi>v</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>:</mo><mtext>翻转标记（暂时不需要知道有什么用）</mtext></mrow><annotation encoding="application/x-tex">rev[x]:\text{翻转标记（暂时不需要知道有什么用）}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">:</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord text"><span class="mord cjk_fallback">翻转标记（暂时不需要知道有什么用）</span></span></span></span></span></p>
+<p>数组没了。。。</p>
+<p>什么？就五个数组？之前说到的虚边、实边、“Perfered Son”都去哪儿了？？？</p>
+<p>实际上，<a href="https://www.luogu.org/problem/P3690">LCT模板</a>确实只需要这几个数组，这得益于LCT的一个玄学结构：</p>
+<p><strong>虚边认父不认子，实边认父也认子</strong></p>
+<p>啥意思？</p>
+<p>就是说LCT中，虚边所连的<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi>f</mi><mi>a</mi><mi>t</mi><mi>h</mi><mi>e</mi><mi>r</mi><mo separator="true">,</mo><mi>s</mi><mi>o</mi><mi>n</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">(father,son)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">h</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span><span class="mclose">)</span></span></span></span>中，只有<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>f</mi><mo>[</mo><mi>s</mi><mi>o</mi><mi>n</mi><mo>]</mo><mo>=</mo><mo>=</mo><mi>f</mi><mi>a</mi><mi>t</mi><mi>h</mi><mi>e</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">f[son] == father</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mopen">[</span><span class="mord mathdefault">s</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span></span><span class="base"><span class="strut" style="height:0.36687em;vertical-align:0em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">h</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span></span></span></span>，记录下这条虚边，而<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>f</mi><mi>a</mi><mi>t</mi><mi>h</mi><mi>e</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">father</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">h</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span></span></span></span>的属性中不包含这条虚边（不记录<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>o</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">son</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span></span></span></span>这个儿子）;</p>
+<p>实边所连的<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi>f</mi><mi>a</mi><mi>t</mi><mi>h</mi><mi>e</mi><mi>r</mi><mo separator="true">,</mo><mi>s</mi><mi>o</mi><mi>n</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">(father,son)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">h</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span><span class="mclose">)</span></span></span></span>中，有<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>f</mi><mo>[</mo><mi>s</mi><mi>o</mi><mi>n</mi><mo>]</mo><mo>=</mo><mo>=</mo><mi>f</mi><mi>a</mi><mi>t</mi><mi>h</mi><mi>e</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">f[son] == father</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mopen">[</span><span class="mord mathdefault">s</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span></span><span class="base"><span class="strut" style="height:0.36687em;vertical-align:0em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">h</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span></span></span></span>，且<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>h</mi><mo>[</mo><mi>f</mi><mi>a</mi><mi>t</mi><mi>h</mi><mi>e</mi><mi>r</mi><mo>]</mo><mo>[</mo><mn>0</mn><mo>]</mo><mo>=</mo><mo>=</mo><mi>s</mi><mi>o</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">ch[father][0] == son</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">h</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">0</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span></span><span class="base"><span class="strut" style="height:0.36687em;vertical-align:0em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span></span></span></span>或<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>h</mi><mo>[</mo><mi>f</mi><mi>a</mi><mi>t</mi><mi>h</mi><mi>e</mi><mi>r</mi><mo>]</mo><mo>[</mo><mn>1</mn><mo>]</mo><mo>=</mo><mo>=</mo><mi>s</mi><mi>o</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">ch[father][1] == son</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">a</span><span class="mord mathdefault">t</span><span class="mord mathdefault">h</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span></span><span class="base"><span class="strut" style="height:0.36687em;vertical-align:0em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">o</span><span class="mord mathdefault">n</span></span></span></span>，父子双方均记录对方。</p>
+<p>所以，我们就可以根据一个节点与其父亲的信息，判断它与父亲之间的边是不是虚边（等价与它是不是一棵Splay的根），由此引出第一个函数：</p>
+<pre><code class="language-cpp">inline int nroot(int x) {//是不是一棵Splay的根
+	return ch[f[x]][0] == x || ch[f[x]][1] == x;
+}
+</code></pre>
+<p><strong>至此，总结一下原树与LCT的结构特点：</strong>（结合图片食用效果更佳）</p>
+<ul>
+<li>给原树中每个非叶节点随意钦定最多一个Perfered Son</li>
+<li>原树中，实边是一个节点与其Perfered Son之间的边，虚边是一个节点与其非Perfered Son之间的边，节点的Perfered Son可变，边的虚实可变</li>
+<li>LCT中，对原树中每一条实链用一棵Splay维护，同一棵Splay内都是实边，不同Splay间用虚边连接，Splay内节点按原树中深度排序</li>
+</ul>
+<h2 id="代码时间">代码时间！</h2>
+<p>其实不看前面的部分，从这里看起，也能学会LCT怎么打。</p>
+<p>但是，肯定存在理解不透彻的情况，也非常容易忘。</p>
+<p>进入正题，在程序中，我们维护的是与原树等价的LCT，而并不直接保存或维护原树。但是有很多操作，主要意义在原树形态中体现。</p>
+<p>因此，对每一个操作，请尽量想象它在原树中的效果和在LCT中的实际操作！</p>
+<h3 id="辅助操作pushup-pushdown">辅助操作：pushup &amp; pushdown</h3>
+<p>分别从儿子更新节点维护的信息和下传标记。</p>
+<p>分别按实际需要写，下文有提代码（LCT模板题用）。</p>
+<h3 id="重要辅助操作splay-rotate">重要辅助操作：splay &amp; rotate</h3>
+<p>LCT中，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>p</mi><mi>l</mi><mi>a</mi><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">splay(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">p</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mclose">)</span></span></span></span>只有一个作用：将节点x转至其所在Splay树的根。</p>
+<p>与普通Splay没什么不同，不同之处均在代码标注：</p>
+<pre><code class="language-cpp">inline void rotate(int x) {
+	static int y,z,d,w;
+	y = f[x];z = f[y];d = chk(x);w = ch[x][!d];
+	if(nroot(y)) ch[z][chk(y)] = x;
+    	ch[x][!d] = y;ch[y][d] = w;
+	if(w) f[w] = y;f[x] = z;f[y] = x;
+//不同1：需判断y是否为Splay的根（y-z是否为虚边，如果是，z不认子）
+	pushup(y);
+}
+inline void splay(int x) {
+	static int y,z;
+	stk[z = 1] = y = x;
+	while(nroot(y)) stk[++z] = y = f[y];
+	while(z) pushdown(stk[z--]);
+//不同2：正式Splay前需先将x至原树根的路径上的点全部标记下传（rev，makeroot中用）
+	while(nroot(x)) {
+		z = f[y = f[x]];
+		if(nroot(y))
+			rotate(chk(x) == chk(y) ? y : x);
+		rotate(x);
+	}
+//不同3：不需记录root，且splay函数的目标只有将x转至根
+	pushup(x);
+}
+</code></pre>
+<h3 id="核心操作access">核心操作：access</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>a</mi><mi>c</mi><mi>c</mi><mi>e</mi><mi>s</mi><mi>s</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">access(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">a</span><span class="mord mathdefault">c</span><span class="mord mathdefault">c</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord mathdefault">s</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mclose">)</span></span></span></span>，在原树中的意义为“打通”节点x到整棵树（不是所在Splay）的根的路径，即 将这条路径上的边全部变成实边，并让x没有Perfered Son。</p>
+<p>请欣赏<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>a</mi><mi>c</mi><mi>c</mi><mi>e</mi><mi>s</mi><mi>s</mi><mo>(</mo><mi>N</mi><mo>)</mo><mo>:</mo></mrow><annotation encoding="application/x-tex">access(N):</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">a</span><span class="mord mathdefault">c</span><span class="mord mathdefault">c</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord mathdefault">s</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">:</span></span></span></span></p>
+<figure data-type="image" tabindex="3"><img src="https://cdn.luogu.com.cn/upload/image_hosting/f25aq4sb.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://cdn.luogu.com.cn/upload/image_hosting/g03eznvg.png" alt="" loading="lazy"></figure>
+<p>可以看到，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>A</mi><mo>−</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">A-N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathdefault">A</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span></span></span></span>的路径全部变实（重），那那些变虚（轻）的边是怎么回事呢？</p>
+<p>是因为原树中每个非叶节点最多只能有一个Perfered Son，要想让一个节点与其非Perfered Son之间的虚边变实，就必须“舍弃”原先的Perfered Son，让这条虚边所连的儿子成为新的Perfered Son（太子只有一个）</p>
+<p>由于不论虚实边都“认父”，所以对于每条虚边，只需更改虚边父亲的儿子，使原来的虚边儿子变为其新的Perfered Son。</p>
+<p>想象一下，原来的Perfered Son（记为 ch）与父亲（记为 x）之间的边由实变虚，在LCT中相当于将原先他们所在的Splay分成两部分，其中一部分在原树中深度均小于等于x的深度，另一部分在原树中深度均大于x的深度。我们只要先<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>p</mi><mi>l</mi><mi>a</mi><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">splay(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">p</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mclose">)</span></span></span></span>，再<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>h</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>[</mo><mn>1</mn><mo>]</mo><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">ch[x][1] = 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">0</span></span></span></span>即可。</p>
+<p>然后，我们再把要变实的那条虚边的儿子（记为 y）所在的Splay的根设置成x的右儿子————y的深度比x大，x是一个Splay的根，又没有右儿子，只要x“认”y所在Splay的根这个儿子，在原树中就相当于x-y由虚变实，即<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>p</mi><mi>l</mi><mi>a</mi><mi>y</mi><mo>(</mo><mi>y</mi><mo>)</mo><mo separator="true">,</mo><mi>c</mi><mi>h</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>[</mo><mn>1</mn><mo>]</mo><mo>=</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">splay(y),ch[x][1] = y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">p</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span></span></span></span>即可。</p>
+<p>我们只要先将<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>a</mi><mi>c</mi><mi>c</mi><mi>e</mi><mi>s</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">access</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">a</span><span class="mord mathdefault">c</span><span class="mord mathdefault">c</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord mathdefault">s</span></span></span></span>最开始的点Prefered Son置为空，再向上对遇到的每条虚边执行如上操作即可。代码如下：</p>
+<pre><code class="language-cpp">inline void access(int x) {
+	for(int y = 0;x;y = x,x = f[x])
+	   	splay(x),ch[x][1] = y,pushup(x);
+//记得pushup更新节点信息，它的儿子发生了改变
+}
+</code></pre>
+<p>什么？这么短？之前不是说还要<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>p</mi><mi>l</mi><mi>a</mi><mi>y</mi><mo>(</mo><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">splay(y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">p</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>吗？</p>
+<p>仔细想想枚举虚边的方式：splay到根，跳到父亲……（循环），每次Splay的根与它LCT中的父亲之间的边就是虚边，所以虚边的儿子总是根！而<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>h</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>[</mo><mn>1</mn><mo>]</mo><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mi>c</mi><mi>h</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>[</mo><mn>1</mn><mo>]</mo><mo>=</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">ch[x][1] = 0,ch[x][1] = y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span></span></span></span>等价于<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>h</mi><mo>[</mo><mi>x</mi><mo>]</mo><mo>[</mo><mn>1</mn><mo>]</mo><mo>=</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">ch[x][1] = y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">h</span><span class="mopen">[</span><span class="mord mathdefault">x</span><span class="mclose">]</span><span class="mopen">[</span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span></span></span></span>,利用重复信息与LCT的优秀结构，我们将如此难懂的一个操作用不到五行完成！</p>
+<p>如果没有理解，跟着下面的图模拟：</p>
+<h3 id="原树">原树：</h3>
+<figure data-type="image" tabindex="5"><img src="https://cdn.luogu.com.cn/upload/image_hosting/f25aq4sb.png" alt="" loading="lazy"></figure>
+<h3 id="accessn前的lct">access(N)前的LCT</h3>
+<figure data-type="image" tabindex="6"><img src="https://cdn.luogu.com.cn/upload/image_hosting/5zj9e8an.png" alt="" loading="lazy"></figure>
+<h3 id="x-ny-0splayn到根chn1-0">(x = N,y = 0)splay(N)到根，ch[N][1] = 0</h3>
+<figure data-type="image" tabindex="7"><img src="https://cdn.luogu.com.cn/upload/image_hosting/s0u5lrs3.png" alt="" loading="lazy"></figure>
+<h3 id="x-iy-nsplayichi1-n">(x = I,y = N)splay(I),ch[I][1] = N</h3>
+<p>(原来splay(I)后ch[I][1] == K，ch[I][1] = N后，K的父亲仍是I，但K和I不在同一Splay里，I-K变为虚边，I-N变为实边)</p>
+<figure data-type="image" tabindex="8"><img src="https://cdn.luogu.com.cn/upload/image_hosting/hz8ywy9k.png" alt="" loading="lazy"></figure>
+<h3 id="x-hy-isplayhchh1-i">(x = H,y = I)splay(H),ch[H][1] = I</h3>
+<figure data-type="image" tabindex="9"><img src="https://cdn.luogu.com.cn/upload/image_hosting/1kudd3q8.png" alt="" loading="lazy"></figure>
+<h3 id="x-ay-hsplayacha1-h">(x = A,y = H)splay(A),ch[A][1] = H</h3>
+<figure data-type="image" tabindex="10"><img src="https://cdn.luogu.com.cn/upload/image_hosting/zjhycp1a.png" alt="" loading="lazy"></figure>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>a</mi><mi>c</mi><mi>c</mi><mi>e</mi><mi>s</mi><mi>s</mi><mo>(</mo><mi>N</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">access(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">a</span><span class="mord mathdefault">c</span><span class="mord mathdefault">c</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord mathdefault">s</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span>大功告成！</p>
+<h3 id="换根操作makeroot-reverse">换根操作：makeroot &amp; reverse</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>m</mi><mi>a</mi><mi>k</mi><mi>e</mi><mi>r</mi><mi>o</mi><mi>o</mi><mi>t</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">makeroot(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">m</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">o</span><span class="mord mathdefault">o</span><span class="mord mathdefault">t</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mclose">)</span></span></span></span>使x成为原树的根。可以想象成将点x捏住，提起到根</p>
+<p>要想成为根，首先访问到根<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>a</mi><mi>c</mi><mi>c</mi><mi>e</mi><mi>s</mi><mi>s</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">access(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">a</span><span class="mord mathdefault">c</span><span class="mord mathdefault">c</span><span class="mord mathdefault">e</span><span class="mord mathdefault">s</span><span class="mord mathdefault">s</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mclose">)</span></span></span></span></p>
+<p>此时x是根到x这条实链上深度最大的点，要让x成为根，x应该是深度最小的。</p>
+<p>如何实现呢？在这条实链的根节点上打翻转标记即可（Splay里按深度排序，翻转后深度颠倒）。</p>
+<pre><code class="language-cpp">inline void reverse(int x) {
+	swap(ch[x][0]);swap(ch[x][1]);
+    rev[x] ^= 1;
+}
+inline void pushdown(int x) {
+	if(rev[x]) {
+		reverse(ch[x][0]);
+		reverse(ch[x][1]);
+		rev[x] = 0;
+	}//在pushdown中相应加上
+}
+inline void makeroot(int x) {
+	access(x);splay(x);reverse(x);
+}//比access还短
+</code></pre>
+<h3 id="找根操作findroot">找根操作：findroot</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>f</mi><mi>i</mi><mi>n</mi><mi>d</mi><mi>r</mi><mi>o</mi><mi>o</mi><mi>t</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">findroot(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.10764em;">f</span><span class="mord mathdefault">i</span><span class="mord mathdefault">n</span><span class="mord mathdefault">d</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">o</span><span class="mord mathdefault">o</span><span class="mord mathdefault">t</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mclose">)</span></span></span></span>返回x在原树中的根。</p>
+<p>很好理解，自行看代码。</p>
+<pre><code class="language-cpp">inline int findroot(int x) {
+	access(x);splay(x);
+	while(ch[x][0]) pushdown(x),x = ch[x][0];
+	splay(x);//记得把根splay回去，保证复杂度
+    return x;
+}
+</code></pre>
+<h3 id="连删边操作link-cut-lct名字由来">连删边操作：link &amp; cut <s>LCT名字由来？</s></h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>l</mi><mi>i</mi><mi>n</mi><mi>k</mi><mo>(</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">link(x,y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">i</span><span class="mord mathdefault">n</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>在<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">(x,y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>之间连一条虚边，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>c</mi><mi>u</mi><mi>t</mi><mo>(</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">cut(x,y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">c</span><span class="mord mathdefault">u</span><span class="mord mathdefault">t</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>断开<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">(x,y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>之间的边。</p>
+<p>连边后随意以x或y为父亲，这里以y作为x的父亲。如果题目不保证操作合法（比如连边后不是树，删一条本没有的边），要如下代码中判断。</p>
+<pre><code class="language-cpp">inline void link(int x,int y) {
+	makeroot(x);
+	if(findroot(y) != x) f[x] = y;
+//判断一下是否联通再连边
+}
+inline void cut(int x,int y) {
+	makeroot(x);
+	if(findroot(y) == x &amp;&amp; f[y] == x &amp;&amp; !ch[y][0]) {
+		ch[x][1] = f[y] = 0;
+		pushup(x);
+	}
+//要判断是否联通，还有在原树中x是不是与y直接联通
+//makeroot(x)，findroot(y)中access(y)
+//使此时x，y应在同一Splay中（以x为根）
+//如果x的后继是y，则原树中x是y的父亲
+}
+</code></pre>
+<h3 id="维护链上信息操作split">维护链上信息操作：split</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>p</mi><mi>l</mi><mi>i</mi><mi>t</mi><mo>(</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">split(x,y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">p</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mord mathdefault">i</span><span class="mord mathdefault">t</span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>在LCT上弄出一棵Splay，代表原树上<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">(x,y)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span>这一条链（当然得把它变成实链）。</p>
+<p>在上文代码中常有pushup，便是为了维护要维护的信息。</p>
+<pre><code class="language-cpp">inline void pushup(int x) {
+	sum[x] = sum[ch[x][0]] ^ sum[ch[x][1]] ^ v[x];
+}//在[模板]LCT中要维护链上异或和
+inline void split(int x,int y) {
+	makeroot(x);access(y);splay(y);
+}//以y作为这棵Splay的根
+</code></pre>
+<h2 id="例题1-洛谷p3690-lct模板">例题1 洛谷P3690 LCT模板</h2>
+<p><a href="https://www.luogu.org/problem/P3690">链接</a></p>
+<p>需要的操作上文都介绍过了，这里只贴代码给个整体印象。</p>
+<pre><code class="language-cpp">#include&lt;bits/stdc++.h&gt;
+using namespace std;
+const int N = 1e5 + 5;
+int n,m,stk[N];
+int f[N],ch[N][2],v[N],sum[N];
+bool rev[N];
+#define I inline void
+inline int chk(int x) {
+	return ch[f[x]][1] == x;
+}
+inline int nroot(int x) {
+	return ch[f[x]][0] == x || ch[f[x]][1] == x;
+}
+I pushup(int x) {
+	sum[x] = sum[ch[x][0]] ^ sum[ch[x][1]] ^ v[x];
+}
+I putrev(int x) {
+	swap(ch[x][0],ch[x][1]);
+	rev[x] ^= 1;
+}
+I pushdown(int x) {
+	if(rev[x]) {
+		putrev(ch[x][0]);
+		putrev(ch[x][1]);
+		rev[x] = 0;
+	}
+}
+I rotate(int x) {
+	static int y,z,d,w;
+	y = f[x];z = f[y];d = chk(x);w = ch[x][!d];
+	if(nroot(y)) ch[z][chk(y)] = x;ch[x][!d] = y;ch[y][d] = w;
+	if(w) f[w] = y;f[x] = z;f[y] = x;
+	pushup(y);
+}
+I splay(int x) {
+	static int y,z;
+	stk[z = 1] = y = x;
+	while(nroot(y)) stk[++z] = y = f[y];
+	while(z) pushdown(stk[z--]);
+	while(nroot(x)) {
+		z = f[y = f[x]];
+		if(nroot(y))
+			rotate(chk(x) == chk(y) ? y : x);
+		rotate(x);
+	}
+	pushup(x);
+}
+I access(int x) {
+	for(int y = 0;x;y = x,x = f[x])
+		splay(x),ch[x][1] = y,pushup(x);
+}
+I makeroot(int x) {
+	access(x);splay(x);putrev(x);
+}
+inline int findroot(int x) {
+	access(x);splay(x);
+	while(ch[x][0]) pushdown(x),x = ch[x][0];
+	splay(x);return x;
+}
+I link(int x,int y) {
+	makeroot(x);
+	if(findroot(y) != x) f[x] = y;
+}
+I cut(int x,int y) {
+	makeroot(x);
+	if(findroot(y) == x &amp;&amp; f[y] == x &amp;&amp; !ch[y][0]) {
+		ch[x][1] = f[y] = 0;
+		pushup(x);
+	}
+}
+I split(int x,int y) {
+	makeroot(x);access(y);splay(y);
+}
+int main() {
+	scanf(&quot;%d%d&quot;,&amp;n,&amp;m);
+	for(int i = 1;i &lt;= n;++i)
+		scanf(&quot;%d&quot;,v+i),sum[i] = v[i];
+	do
+	{
+		static int x,y,op;
+		scanf(&quot;%d%d%d&quot;,&amp;op,&amp;x,&amp;y);
+		switch(op) {
+			case 0:
+				split(x,y);
+				printf(&quot;%d\n&quot;,sum[y]);
+				break;
+			case 1:
+				link(x,y);
+				break;
+			case 2:
+				cut(x,y);
+				break;
+			case 3:
+				makeroot(x);
+				v[x] = y;
+				pushup(x);
+		}
+	}while(--m);
+	return 0;
+}
+</code></pre>
+<p>暂时更新到这里……</p>
+<p>到时候<s>等我想更了</s>再更P3203、P2387<s>和P1501</s></p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://zxyhymzg.github.io/tag/3b-V2vRYI/" class="tag">
+                    OI
+                  </a>
+                
+              </div>
+            
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
